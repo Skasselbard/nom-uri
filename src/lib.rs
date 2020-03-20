@@ -14,3 +14,8 @@ pub enum Authority<'uri> {
     Host(&'uri str),
     Port(u16),
 }
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub enum UriPart<'uri> {
+    Fragment(&'uri str),
+    Query(&'uri str),
+}

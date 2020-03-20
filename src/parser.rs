@@ -1,3 +1,4 @@
+use super::*;
 use nom::{
     branch::*, bytes::complete::*, character::complete::*, character::*, combinator::*,
     error::ErrorKind, multi::*, number::complete::*, sequence::*, IResult,
@@ -88,15 +89,18 @@ fn path_empty(i: &[u8]) -> IResult<&[u8], ()> {
     not(peek(pchar))(i)
 }
 /// segment       = *pchar
+/// TODO:
 fn segment(i: &[u8]) -> IResult<&[u8], &str> {
     many0_char_to_string!(pchar)(i)
 }
 /// segment-nz    = 1*pchar
+/// TODO:
 fn segment_nz(i: &[u8]) -> IResult<&[u8], &str> {
     many1_char_to_string!(pchar)(i)
 }
 /// segment-nz-nc = 1*( unreserved / pct-encoded / sub-delims / "@" )
 ///               ; non-zero-length segment without any colon ":"
+//TODO:
 fn segment_nz_nc(i: &[u8]) -> IResult<&[u8], &str> {
     many1_char_to_string!(alt((
         alt((unreserved, pct_encoded)),
@@ -112,12 +116,26 @@ fn pchar(i: &[u8]) -> IResult<&[u8], char> {
     ))(i)
 }
 // query         = *( pchar / "/" / "?" )
-fn query(i: &[u8]) -> IResult<&[u8], &str> {
-    many0_char_to_string!(alt((pchar, one_of("/?"))))(i)
+fn query(i: &[u8]) -> IResult<&[u8], UriPart> {
+    let (_, position) = fold_many0(alt((pchar, one_of("/?"))), 0, |mut pos: usize, item| {
+        if peek(pct_encoded)(i.split_at(pos).1).is_ok() {
+            pos += 3
+        } else {
+            pos += 1;
+        }
+        pos
+    })(i)?;
+    let (o, i) = i.split_at(position);
+    let o = unsafe { core::str::from_utf8_unchecked(o) }; // already parsed -> cannot fail
+    Ok((i, UriPart::Query(o)))
 }
 /// fragment      = *( pchar / "/" / "?" )
-fn fragment(i: &[u8]) -> IResult<&[u8], &str> {
-    many0_char_to_string!(alt((pchar, one_of("/?"))))(i)
+fn fragment(i: &[u8]) -> IResult<&[u8], UriPart> {
+    let (i, o) = match query(i)? {
+        (i, UriPart::Query(o)) => (i, o),
+        _ => return Err(nom::Err::Error((i, ErrorKind::Many0))), //TODO: What error?
+    };
+    Ok((i, UriPart::Fragment(o)))
 }
 /// percentage encoded u32
 /// pct-encoded   = "%" HEXDIG HEXDIG
@@ -177,11 +195,17 @@ fn fragment_test() {
     unsafe {
         assert_eq!(
             fragment(pchar_no_pct),
-            Ok((&[][..], core::str::from_utf8_unchecked(&pchar_no_pct)))
+            Ok((
+                &[][..],
+                UriPart::Fragment(core::str::from_utf8_unchecked(&pchar_no_pct))
+            ))
         )
     };
-    assert_eq!(fragment(b"/?{"), Ok((&b"{"[..], "/?")));
-    assert_eq!(fragment(b"%30%41#"), Ok((&b"#"[..], "0A")));
+    assert_eq!(fragment(b"/?{"), Ok((&b"{"[..], UriPart::Fragment("/?"))));
+    assert_eq!(
+        fragment(b"%30%41#"),
+        Ok((&b"#"[..], UriPart::Fragment("%30%41")))
+    );
 }
 #[test]
 fn pct_encoded_test() {
