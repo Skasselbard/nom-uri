@@ -1,12 +1,24 @@
 mod parser;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
+pub enum UriReference<'uri> {
+    Uri(Uri<'uri>),
+    Reference(Reference<'uri>),
+}
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Uri<'uri> {
     scheme: &'uri str,
     authority: Authority<'uri>,
-    path: &'uri str,
-    query: Option<&'uri str>,
-    fragment: Option<&'uri str>,
+    path: Path<'uri>,
+    query: Option<Query<'uri>>,
+    fragment: Option<Fragment<'uri>>,
+}
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub struct Reference<'uri> {
+    authority: Authority<'uri>,
+    path: Path<'uri>,
+    query: Option<Query<'uri>>,
+    fragment: Option<Fragment<'uri>>,
 }
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Authority<'uri> {
@@ -14,12 +26,12 @@ pub struct Authority<'uri> {
     host: Host<'uri>,
     port: Option<u16>,
 }
-//TODO: can be part of uri struct
 #[derive(Debug, PartialEq, Clone, Copy)]
-pub enum UriPart<'uri> {
-    Fragment(&'uri str),
-    Query(&'uri str),
-}
+pub struct Fragment<'uri>(&'uri str);
+
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub struct Query<'uri>(&'uri str);
+
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Host<'uri> {
     RegistryName(&'uri str),
@@ -34,4 +46,10 @@ pub enum Path<'uri> {
     NoScheme(&'uri str),
     Rootless(&'uri str),
     Empty,
+}
+
+impl<'uri> Uri<'uri> {
+    pub fn to_absoulte(&self) -> &str {
+        ""
+    }
 }
