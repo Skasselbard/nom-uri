@@ -27,12 +27,6 @@ pub struct Authority<'uri> {
     port: Option<u16>,
 }
 #[derive(Debug, PartialEq, Clone, Copy)]
-pub struct Fragment<'uri>(&'uri str);
-
-#[derive(Debug, PartialEq, Clone, Copy)]
-pub struct Query<'uri>(&'uri str);
-
-#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Host<'uri> {
     RegistryName(&'uri str),
     V4(&'uri str),
@@ -47,6 +41,10 @@ pub enum Path<'uri> {
     Rootless(&'uri str),
     Empty,
 }
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub struct Fragment<'uri>(&'uri str);
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub struct Query<'uri>(&'uri str);
 
 impl<'uri> Uri<'uri> {
     pub fn to_absoulte(&self) -> &str {
