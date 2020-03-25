@@ -10,7 +10,6 @@
     - no scheme invariant checking (like absence of host for special schemes)
 
 */
-#![cfg(feature="no_std")]
 #![no_std]
 
 mod error;
@@ -20,13 +19,13 @@ mod parser;
 pub use error::Error;
 use error::*;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 #[allow(unused)]
 enum UriReference<'uri> {
     Uri(Uri<'uri>),
     Reference(Reference<'uri>),
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct Uri<'uri> {
     scheme: &'uri str,
     authority: Option<Authority<'uri>>,
@@ -34,27 +33,27 @@ pub struct Uri<'uri> {
     query: Option<Query<'uri>>,
     fragment: Option<Fragment<'uri>>,
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 struct Reference<'uri> {
     authority: Option<Authority<'uri>>,
     path: Path<'uri>,
     query: Option<Query<'uri>>,
     fragment: Option<Fragment<'uri>>,
 }
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 struct Authority<'uri> {
     userinfo: Option<&'uri str>,
     host: Host<'uri>,
     port: Option<&'uri str>,
 }
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Host<'uri> {
     RegistryName(&'uri str),
     V4(&'uri str),
     V6(&'uri str),
     VFuture(&'uri str),
 }
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 enum Path<'uri> {
     AbEmpty(&'uri str),
     Absolute(&'uri str),
@@ -62,9 +61,9 @@ enum Path<'uri> {
     Rootless(&'uri str),
     Empty,
 }
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 struct Fragment<'uri>(&'uri str);
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 struct Query<'uri>(&'uri str);
 
 impl<'uri> Uri<'uri> {

@@ -28,17 +28,9 @@ fn main() {
     assert_eq!(uri_str, "https://example.com/data.csv#cell=4,1-6,2");
 }
 ```
-
-## no_std
-
-Cargo.toml:
-```toml
-[dependencies]
-nom-uri = { git = "https://github.com/Skasselbard/nom-uri", features = ["no_std"]}
-```
 ## Relation to [url](https://crates.io/crates/url) crate
 This crate was build for ``no_std`` environments and to be used without allocator. A nice side effect is that parsing can be done completely in memory. The returned ``Uri`` object stores the parsed components as slices of the original input.
 
-The [URL](https://crates.io/crates/url) is better suited for normal rust programs with access to the standard library. This crate is inspired by the URL crate but differs in some details.
+[URL](https://crates.io/crates/url) is better suited for normal rust programs with access to the standard library. This crate is inspired by the URL crate but differs in some details.
 For example this crate does not parse special characters (including spaces!). They have to be percent encoded **before** parsing ([space] => "%20"). The URL crate does this automatically.
 In general the URL crate has more advanced features, especially for everyday URL handling.
