@@ -8,3 +8,6 @@ edition = "2018"
 
 [dependencies]
 nom = {version="5.1.1", default-features = false}
+
+[features]
+no_std = []

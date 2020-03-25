@@ -10,6 +10,9 @@
     - no scheme invariant checking (like absence of host for special schemes)
 
 */
+#![cfg(feature="no_std")]
+#![no_std]
+
 mod error;
 mod formater;
 mod parser;
