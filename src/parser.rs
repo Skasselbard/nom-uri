@@ -161,7 +161,7 @@ pub fn scheme<'a, E: nom::error::ParseError<&'a [u8]>>(i: &'a [u8]) -> IResult<&
 /// ```abnf
 /// authority     = [ userinfo "@" ] host [ ":" port ]
 /// ```
-pub fn authority<'a, E: nom::error::ParseError<&'a [u8]>>(
+pub(crate) fn authority<'a, E: nom::error::ParseError<&'a [u8]>>(
     i: &'a [u8],
 ) -> IResult<&'a [u8], Authority, E> {
     let (rest, (user_info, hos_t, por_t)) = tuple((

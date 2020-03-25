@@ -1,15 +1,17 @@
+/*!
+ - developed for no_std environments
+ - parsing is completely in memory
+ - no spaces allowed
+ - no implicit percent encoding of unallowed characters
+ - interface (and documentation) inspired by https://crates.io/crates/url
+    - but some things are different
+    - url is feature richer
+    - no default values (for ports)
+    - no scheme invariant checking (like absence of host for special schemes)
+
+*/
 mod error;
 mod formater;
-///
-/// - developed for no_std environments
-/// - parsing is completely in memory
-/// - no spaces allowed
-/// - no implicit percent encoding of unallowed characters
-/// - interface (and documentation) inspired by https://crates.io/crates/url
-///    - but some things are different
-///    - url is feature richer
-///    - no default values (for ports)
-///    - no scheme invariant checking (like absence of host for special schemes)
 mod parser;
 
 pub use error::Error;
@@ -37,7 +39,7 @@ struct Reference<'uri> {
     fragment: Option<Fragment<'uri>>,
 }
 #[derive(Debug, PartialEq, Clone, Copy)]
-pub struct Authority<'uri> {
+struct Authority<'uri> {
     userinfo: Option<&'uri str>,
     host: Host<'uri>,
     port: Option<&'uri str>,
@@ -142,7 +144,7 @@ impl<'uri> Uri<'uri> {
     /// omit the fragment
     /// **unimplemented**
     #[inline]
-    pub fn base(&self) -> Option<&str> {
+    fn base(&self) -> Option<&str> {
         unimplemented!()
     }
 
@@ -415,34 +417,27 @@ impl<'uri> Uri<'uri> {
     ///
     /// # fn run() -> Result<(), nom_uri::Error> {
     /// let uri = Uri::parse("https://example.com/foo/bar")?;
-    /// let mut path_segments = uri.path_segments().ok_or_else(|| "cannot be base")?;
+    /// let mut path_segments = uri.path_segments();
     /// assert_eq!(path_segments.next(), Some("foo"));
     /// assert_eq!(path_segments.next(), Some("bar"));
     /// assert_eq!(path_segments.next(), None);
     ///
     /// let uri = Uri::parse("https://example.com")?;
-    /// let mut path_segments = uri.path_segments().ok_or_else(|| "cannot be base")?;
+    /// let mut path_segments = uri.path_segments();
     /// assert_eq!(path_segments.next(), Some(""));
     /// assert_eq!(path_segments.next(), None);
     ///
-    /// let uri = Uri::parse("data:text/plain,HelloWorld")?;
-    /// assert!(uri.path_segments().is_none());
-    ///
-    /// let uri = Uri::parse("https://example.com/countries/việt nam")?;
-    /// let mut path_segments = uri.path_segments().ok_or_else(|| "cannot be base")?;
-    /// assert_eq!(path_segments.next(), Some("countries"));
-    /// assert_eq!(path_segments.next(), Some("vi%E1%BB%87t%20nam"));
     /// # Ok(())
     /// # }
     /// # run().unwrap();
     /// ```
-    pub fn path_segments(&self) -> Option<core::str::Split<char>> {
-        // FIXME:
-        if self.path() != "" {
-            Some(self.path()[1..].split('/'))
-        } else {
-            None
+    pub fn path_segments(&self) -> core::str::Split<char> {
+        let mut path = self.path();
+        if path.starts_with('/') {
+            let (_, pruned) = path.split_at(1);
+            path = pruned;
         }
+        path.split('/')
     }
 
     /// Return this URI’s query string, if any, as a percent-encoded ASCII string.
@@ -476,7 +471,7 @@ impl<'uri> Uri<'uri> {
     ///
     /// # Examples
     ///
-    /// ```compile_fail
+    /// ```
     /// use std::borrow::Cow;
     ///
     /// use nom_uri::Uri;
@@ -494,7 +489,7 @@ impl<'uri> Uri<'uri> {
     /// # run().unwrap();
     ///
     #[inline]
-    pub fn query_pairs(&self) -> &[(&str, &str)] {
+    fn query_pairs(&self) -> &[(&str, &str)] {
         // FIXME:
         unimplemented!()
     }
@@ -761,6 +756,7 @@ impl<'uri> Uri<'uri> {
     }
 
     /// Change this URI’s scheme.
+    /// TODO: Doc and examples
     pub fn set_scheme<'a: 'uri>(&mut self, scheme: &'a str) -> Result<(), Error> {
         self.scheme = match parser::scheme::<ParserError>(scheme.as_bytes()) {
             Ok((_, scheme)) => scheme,
