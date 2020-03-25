@@ -70,7 +70,7 @@ impl<'uri> Uri<'uri> {
     /// ```rust
     /// use nom_uri::Uri;
     ///
-    /// # fn run() -> Result<(), nom_uri::Error<'static>> {
+    /// # fn run() -> Result<(), nom_uri::Error> {
     /// let uri = Uri::parse("https://example.net")?;
     /// # Ok(())
     /// # }
@@ -87,7 +87,7 @@ impl<'uri> Uri<'uri> {
     /// ```rust
     /// use nom_uri::Uri;
     ///
-    /// # fn run() -> Result<(), nom_uri::Error<'static>> {
+    /// # fn run() -> Result<(), nom_uri::Error> {
     /// let uri = Uri::parse_bytes(b"https://example.net")?;
     /// # Ok(())
     /// # }
@@ -116,11 +116,11 @@ impl<'uri> Uri<'uri> {
     /// ```
     /// use nom_uri::Uri;
     ///
-    /// # fn run() -> Result<(), nom_uri::Error<'static>> {
+    /// # fn run() -> Result<(), nom_uri::Error> {
     /// let uri_str = "ftp://rms@example.com";
-    /// let uri = Uri::parse(uri_str).unwrap();
+    /// let uri = Uri::parse(uri_str)?;
     /// let buffer = &mut [b'x'; 30][..];
-    /// assert_eq!(uri_str, uri.as_str(buffer).unwrap());
+    /// assert_eq!(uri_str, uri.as_str(buffer)?);
     /// # Ok(())
     /// # }
     /// # run().unwrap();
@@ -132,12 +132,15 @@ impl<'uri> Uri<'uri> {
         if write!(buffer, "{}", self).is_err() {
             return Err(Error::BufferToSmall);
         }
-        unsafe { Ok(core::str::from_utf8_unchecked_mut(buffer.buffer())) }
+        let formatted = unsafe { core::str::from_utf8_unchecked_mut(buffer.buffer()) };
+        Uri::parse(&formatted)?; // check if we build a correct uri
+        Ok(formatted)
     }
 
     /// TODO: doc
     /// absolute uri
     /// omit the fragment
+    /// **unimplemented**
     #[inline]
     pub fn base(&self) -> Option<&str> {
         unimplemented!()
@@ -150,7 +153,7 @@ impl<'uri> Uri<'uri> {
     /// ```
     /// use nom_uri::Uri;
     ///
-    /// # fn run() -> Result<(), nom_uri::Error<'static>> {
+    /// # fn run() -> Result<(), nom_uri::Error> {
     /// let uri = Uri::parse("file:///tmp/foo")?;
     /// assert_eq!(uri.scheme(), "file");
     /// # Ok(())
@@ -170,7 +173,7 @@ impl<'uri> Uri<'uri> {
     /// ```
     /// use nom_uri::Uri;
     ///
-    /// # fn run() -> Result<(), nom_uri::Error<'static>> {
+    /// # fn run() -> Result<(), nom_uri::Error> {
     /// let uri = Uri::parse("ftp://rms@example.com")?;
     /// assert!(uri.has_authority());
     ///
@@ -195,7 +198,7 @@ impl<'uri> Uri<'uri> {
     /// ```
     /// use nom_uri::Uri;
     ///
-    /// # fn run() -> Result<(), nom_uri::Error<'static>> {
+    /// # fn run() -> Result<(), nom_uri::Error> {
     /// let uri = Uri::parse("ftp://rms@example.com")?;
     /// assert_eq!(uri.userinfo(), Some("rms"));
     ///
@@ -218,7 +221,7 @@ impl<'uri> Uri<'uri> {
     ///
     /// ```
     /// use nom_uri::Uri;
-    /// # fn run() -> Result<(), nom_uri::Error<'static>> {
+    /// # fn run() -> Result<(), nom_uri::Error> {
     /// let uri = Uri::parse("ftp://rms@example.com")?;
     /// assert!(uri.has_host());
     ///
@@ -247,7 +250,7 @@ impl<'uri> Uri<'uri> {
     /// ```
     /// use nom_uri::Uri;
     ///
-    /// # fn run() -> Result<(), nom_uri::Error<'static>> {
+    /// # fn run() -> Result<(), nom_uri::Error> {
     /// let uri = Uri::parse("https://127.0.0.1/index.html")?;
     /// assert_eq!(uri.host_str(), Some("127.0.0.1"));
     ///
@@ -284,7 +287,7 @@ impl<'uri> Uri<'uri> {
     /// ```
     /// use nom_uri::Uri;
     ///
-    /// # fn run() -> Result<(), nom_uri::Error<'static>> {
+    /// # fn run() -> Result<(), nom_uri::Error> {
     /// let uri = Uri::parse("https://127.0.0.1/index.html")?;
     /// assert!(uri.host().is_some());
     ///
@@ -314,7 +317,7 @@ impl<'uri> Uri<'uri> {
     /// ```
     /// use nom_uri::Uri;
     ///
-    /// # fn run() -> Result<(), nom_uri::Error<'static>> {
+    /// # fn run() -> Result<(), nom_uri::Error> {
     /// let uri = Uri::parse("https://127.0.0.1/")?;
     /// assert_eq!(uri.domain(), None);
     ///
@@ -341,7 +344,7 @@ impl<'uri> Uri<'uri> {
     /// ```
     /// use nom_uri::Uri;
     ///
-    /// # fn run() -> Result<(), nom_uri::Error<'static>> {
+    /// # fn run() -> Result<(), nom_uri::Error> {
     /// let uri = Uri::parse("https://example.com")?;
     /// assert_eq!(uri.port(), None);
     ///
@@ -375,7 +378,7 @@ impl<'uri> Uri<'uri> {
     /// ```rust
     /// use nom_uri::Uri;
     ///
-    /// # fn run() -> Result<(), nom_uri::Error<'static>> {
+    /// # fn run() -> Result<(), nom_uri::Error> {
     /// let uri = Uri::parse("https://example.com/api/versions?page=2")?;
     /// assert_eq!(uri.path(), "/api/versions");
     ///
@@ -410,7 +413,7 @@ impl<'uri> Uri<'uri> {
     /// use nom_uri::Uri;
     /// # use std::error::Error;
     ///
-    /// # fn run() -> Result<(), nom_uri::Error<'static>> {
+    /// # fn run() -> Result<(), nom_uri::Error> {
     /// let uri = Uri::parse("https://example.com/foo/bar")?;
     /// let mut path_segments = uri.path_segments().ok_or_else(|| "cannot be base")?;
     /// assert_eq!(path_segments.next(), Some("foo"));
@@ -449,7 +452,7 @@ impl<'uri> Uri<'uri> {
     /// ```rust
     /// use nom_uri::Uri;
     ///
-    /// fn run() -> Result<(), nom_uri::Error<'static>> {
+    /// fn run() -> Result<(), nom_uri::Error> {
     /// let uri = Uri::parse("https://example.com/products?page=2")?;
     /// let query = uri.query();
     /// assert_eq!(query, Some("page=2"));
@@ -478,7 +481,7 @@ impl<'uri> Uri<'uri> {
     ///
     /// use nom_uri::Uri;
     ///
-    /// # fn run() -> Result<(), nom_uri::Error<'static>> {
+    /// # fn run() -> Result<(), nom_uri::Error> {
     /// let uri = Uri::parse("https://example.com/products?page=2&sort=desc")?;
     /// let mut pairs = uri.query_pairs();
     ///
@@ -512,7 +515,7 @@ impl<'uri> Uri<'uri> {
     /// ```rust
     /// use nom_uri::Uri;
     ///
-    /// # fn run() -> Result<(), nom_uri::Error<'static>> {
+    /// # fn run() -> Result<(), nom_uri::Error> {
     /// let uri = Uri::parse("https://example.com/data.csv#row=4")?;
     ///
     /// assert_eq!(uri.fragment(), Some("row=4"));
@@ -538,16 +541,16 @@ impl<'uri> Uri<'uri> {
     /// ```rust
     /// use nom_uri::Uri;
     ///
-    /// # fn run() -> Result<(), nom_uri::Error<'static>> {
+    /// # fn run() -> Result<(), nom_uri::Error> {
     /// let buffer = &mut [b' '; 50][..];
     /// let mut uri = Uri::parse("https://example.com/data.csv")?;
-    /// assert_eq!(uri.as_str(buffer).unwrap(), "https://example.com/data.csv");
+    /// assert_eq!(uri.as_str(buffer)?, "https://example.com/data.csv");
     /// uri.set_fragment(Some("cell=4,1-6,2"));
-    /// assert_eq!(uri.as_str(buffer).unwrap(), "https://example.com/data.csv#cell=4,1-6,2");
+    /// assert_eq!(uri.as_str(buffer)?, "https://example.com/data.csv#cell=4,1-6,2");
     /// assert_eq!(uri.fragment(), Some("cell=4,1-6,2"));
     ///
     /// uri.set_fragment(None);
-    /// assert_eq!(uri.as_str(buffer).unwrap(), "https://example.com/data.csv");
+    /// assert_eq!(uri.as_str(buffer)?, "https://example.com/data.csv");
     /// assert!(uri.fragment().is_none());
     /// # Ok(())
     /// # }
@@ -571,13 +574,13 @@ impl<'uri> Uri<'uri> {
     /// ```rust
     /// use nom_uri::Uri;
     ///
-    /// # fn run() -> Result<(), nom_uri::Error<'static>> {
+    /// # fn run() -> Result<(), nom_uri::Error> {
     /// let buffer = &mut [b' '; 50][..];
     /// let mut uri = Uri::parse("https://example.com/products")?;
-    /// assert_eq!(uri.as_str(buffer).unwrap(), "https://example.com/products");
+    /// assert_eq!(uri.as_str(buffer)?, "https://example.com/products");
     ///
     /// uri.set_query(Some("page=2"));
-    /// assert_eq!(uri.as_str(buffer).unwrap(), "https://example.com/products?page=2");
+    /// assert_eq!(uri.as_str(buffer)?, "https://example.com/products?page=2");
     /// assert_eq!(uri.query(), Some("page=2"));
     /// # Ok(())
     /// # }
@@ -596,21 +599,27 @@ impl<'uri> Uri<'uri> {
 
     /// Change this URI’s path.
     ///
+    /// Be careful to set the path correctly.
+    /// This includes the initial '/' most paths have.
+    /// The standard allows situations there it can be omitted.
+    ///
+    /// Currently **no checks** are made on the input.
+    ///
     /// # Examples
     ///
     /// ```rust
     /// use nom_uri::Uri;
     ///
-    /// # fn run() -> Result<(), nom_uri::Error<'static>> {
+    /// # fn run() -> Result<(), nom_uri::Error> {
     /// let mut uri = Uri::parse("https://example.com")?;
     /// uri.set_path("/api/comments");
     /// let buffer = &mut [b' '; 50][..];
-    /// assert_eq!(uri.as_str(buffer).unwrap(), "https://example.com/api/comments");
+    /// assert_eq!(uri.as_str(buffer)?, "https://example.com/api/comments");
     /// assert_eq!(uri.path(), "/api/comments");
     ///
     /// let mut uri = Uri::parse("https://example.com/api")?;
     /// uri.set_path("/data/report.csv");
-    /// assert_eq!(uri.as_str(buffer).unwrap(), "https://example.com/data/report.csv");
+    /// assert_eq!(uri.as_str(buffer)?, "https://example.com/data/report.csv");
     /// assert_eq!(uri.path(), "/data/report.csv");
     /// # Ok(())
     /// # }
@@ -633,15 +642,16 @@ impl<'uri> Uri<'uri> {
     /// use nom_uri::Uri;
     /// # use std::error::Error;
     ///
-    /// # fn run() -> Result<(), nom_uri::Error<'static>> {
-    /// let mut uri = Uri::parse("ssh://example.net:2048/")?;
+    /// # fn run() -> Result<(), nom_uri::Error> {
+    /// let uri_str = "ssh://example.net:2048/";
+    /// let mut uri = Uri::parse(uri_str)?;
     ///
     /// uri.set_port(Some("4096"))?;
     /// let buffer = &mut [b' '; 50][..];
-    /// assert_eq!(uri.as_str(buffer).unwrap(), "ssh://example.net:4096/");
+    /// assert_eq!(uri.as_str(buffer)?, "ssh://example.net:4096/");
     ///
     /// uri.set_port(None);
-    /// assert_eq!(uri.as_str(buffer).unwrap(), "ssh://example.net/");
+    /// assert_eq!(uri.as_str(buffer)?, "ssh://example.net/");
     /// # Ok(())
     /// # }
     /// # run().unwrap();
@@ -651,10 +661,7 @@ impl<'uri> Uri<'uri> {
             Some(auth) => match port {
                 Some(port) => match parser::port::<ParserError>(port.as_bytes()) {
                     Ok((_, p)) => {
-                        // dbg!(&p);
-                        // dbg!(&auth);
                         auth.port = p;
-                        // dbg!(&auth);
                     }
                     Err(e) => return Err(nom_error_to_error(e)),
                 },
@@ -677,12 +684,12 @@ impl<'uri> Uri<'uri> {
     /// ```
     /// use nom_uri::Uri;
     ///
-    /// # fn run() -> Result<(), nom_uri::Error<'static>> {
+    /// # fn run() -> Result<(), nom_uri::Error> {
     /// let mut uri = Uri::parse("https://example.net")?;
     /// let result = uri.set_host(Some("rust-lang.org"));
     /// assert!(result.is_ok());
     /// let buffer = &mut [b' '; 50][..];
-    /// assert_eq!(uri.as_str(buffer).unwrap(), "https://rust-lang.org");
+    /// assert_eq!(uri.as_str(buffer)?, "https://rust-lang.org");
     /// # Ok(())
     /// # }
     /// # run().unwrap();
@@ -693,12 +700,12 @@ impl<'uri> Uri<'uri> {
     /// ```
     /// use nom_uri::Uri;
     ///
-    /// # fn run() -> Result<(), nom_uri::Error<'static>> {
+    /// # fn run() -> Result<(), nom_uri::Error> {
     /// let mut uri = Uri::parse("foo://example.net")?;
     /// let result = uri.set_host(None);
     /// assert!(result.is_ok());
     /// let buffer = &mut [b' '; 50][..];
-    /// assert_eq!(uri.as_str(buffer).unwrap(), "foo:");
+    /// assert_eq!(uri.as_str(buffer)?, "foo:");
     /// # Ok(())
     /// # }
     /// # run().unwrap();
@@ -724,21 +731,33 @@ impl<'uri> Uri<'uri> {
     /// Setup userinfo to user1
     ///
     /// ```
-    /// use uri::{Uri, ()};
+    /// use nom_uri::Uri;
     ///
-    /// # fn run() -> Result<(), nom_uri::Error<'static>> {
+    /// # fn run() -> Result<(), nom_uri::Error> {
     /// let mut uri = Uri::parse("ftp://example.com/")?;
-    /// let result = uri.set_userinfo("user1");
+    /// let result = uri.set_userinfo(Some("user1"));
     /// let buffer = &mut [b' '; 50][..];
     /// assert!(result.is_ok());
-    /// assert_eq!(uri.userinfo(), "user1");
-    /// assert_eq!(uri.as_str(), "ftp://user1@example.com/");
+    /// assert_eq!(uri.userinfo(), Some("user1"));
+    /// assert_eq!(uri.as_str(buffer)?, "ftp://user1@example.com/");
     /// # Ok(())
     /// # }
     /// # run().unwrap();
     /// ```
-    pub fn set_userinfo(&mut self, _username: &str) -> Result<(), Error> {
-        unimplemented!()
+    pub fn set_userinfo<'a: 'uri>(&mut self, userinfo: Option<&'a str>) -> Result<(), Error> {
+        match self.authority.as_mut() {
+            Some(auth) => match userinfo {
+                Some(userinfo) => match parser::userinfo::<ParserError>(userinfo.as_bytes()) {
+                    Ok((_, info)) => {
+                        auth.userinfo = Some(info);
+                    }
+                    Err(e) => return Err(nom_error_to_error(e)),
+                },
+                None => auth.port = None,
+            },
+            None => return Err(Error::NoAuthority),
+        };
+        Ok(())
     }
 
     /// Change this URI’s scheme.
