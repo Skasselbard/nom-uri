@@ -16,16 +16,19 @@ mod error;
 mod formater;
 mod parser;
 
+#[macro_use]
+extern crate hash32_derive;
+
 pub use error::Error;
 use error::*;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Hash)]
 #[allow(unused)]
 enum UriReference<'uri> {
     Uri(Uri<'uri>),
     Reference(Reference<'uri>),
 }
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Hash)]
 pub struct Uri<'uri> {
     scheme: &'uri str,
     authority: Option<Authority<'uri>>,
@@ -33,27 +36,27 @@ pub struct Uri<'uri> {
     query: Option<Query<'uri>>,
     fragment: Option<Fragment<'uri>>,
 }
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Hash)]
 struct Reference<'uri> {
     authority: Option<Authority<'uri>>,
     path: Path<'uri>,
     query: Option<Query<'uri>>,
     fragment: Option<Fragment<'uri>>,
 }
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 struct Authority<'uri> {
     userinfo: Option<&'uri str>,
     host: Host<'uri>,
     port: Option<&'uri str>,
 }
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub enum Host<'uri> {
     RegistryName(&'uri str),
     V4(&'uri str),
     V6(&'uri str),
     VFuture(&'uri str),
 }
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 enum Path<'uri> {
     AbEmpty(&'uri str),
     Absolute(&'uri str),
@@ -61,9 +64,9 @@ enum Path<'uri> {
     Rootless(&'uri str),
     Empty,
 }
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash, Hash32)]
 struct Fragment<'uri>(&'uri str);
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash, Hash32)]
 struct Query<'uri>(&'uri str);
 
 impl<'uri> Uri<'uri> {
@@ -795,5 +798,47 @@ impl<'uri> Query<'uri> {
 impl<'uri> Fragment<'uri> {
     pub fn len(&self) -> usize {
         self.0.len()
+    }
+}
+impl<'uri> hash32::Hash for Host<'uri> {
+    fn hash<H: hash32::Hasher>(&self, state: &mut H) {
+        match self {
+            Host::RegistryName(s) | Host::V4(s) | Host::V6(s) | Host::VFuture(s) => {
+                hash32::Hash::hash(s, state)
+            }
+        }
+    }
+}
+impl<'uri> hash32::Hash for Path<'uri> {
+    fn hash<H: hash32::Hasher>(&self, state: &mut H) {
+        match self {
+            Path::Absolute(p) | Path::NoScheme(p) | Path::Rootless(p) | Path::AbEmpty(p) => {
+                p.hash(state)
+            }
+            Path::Empty => hash32::Hash::hash("", state),
+        }
+    }
+}
+impl<'uri> hash32::Hash for Uri<'uri> {
+    fn hash<H: hash32::Hasher>(&self, state: &mut H) {
+        hash32::Hash::hash(self.scheme, state);
+        hash32::Hash::hash(
+            &self.authority.unwrap_or(Authority {
+                userinfo: None,
+                host: Host::RegistryName(""),
+                port: None,
+            }),
+            state,
+        );
+        hash32::Hash::hash(&self.path, state);
+        hash32::Hash::hash(&self.query.unwrap_or(Query("")), state);
+        hash32::Hash::hash(&self.fragment.unwrap_or(Fragment("")), state);
+    }
+}
+impl<'uri> hash32::Hash for Authority<'uri> {
+    fn hash<H: hash32::Hasher>(&self, state: &mut H) {
+        hash32::Hash::hash(self.userinfo.unwrap_or(""), state);
+        hash32::Hash::hash(&self.host, state);
+        hash32::Hash::hash(self.port.unwrap_or(""), state);
     }
 }

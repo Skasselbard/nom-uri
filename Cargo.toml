@@ -8,3 +8,5 @@ edition = "2018"
 
 [dependencies]
 nom = {version="5.1.1", default-features = false}
+hash32-derive = "0.1.0"
+hash32 = "0.1.1"
