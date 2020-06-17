@@ -231,7 +231,8 @@ fn ip_literal<'a, E: nom::error::ParseError<&'a [u8]>>(i: &'a [u8]) -> IResult<&
 fn ip_v_future<'a, E: nom::error::ParseError<&'a [u8]>>(
     _i: &'a [u8],
 ) -> IResult<&'a [u8], Host, E> {
-    unimplemented!();
+    // unimplemented!();
+    Err(nom::Err::Error(E::from_error_kind(_i, ErrorKind::Verify)))
 }
 /// ```abnf
 /// IPv6address   =                            6( h16 ":" ) (ls32 / IPv4address)

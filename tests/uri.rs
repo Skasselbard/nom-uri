@@ -2,12 +2,15 @@ extern crate nom_uri;
 
 #[test]
 fn parser() {
+    use nom_uri::Host;
     use nom_uri::Uri;
     let uri = Uri::parse("ftp://rms@example.com").unwrap();
     assert!(uri.has_host());
 
     let uri = Uri::parse("https://example.com/api/versions?page=2").unwrap();
     assert_eq!(uri.path(), "/api/versions");
+    let uri = Uri::parse("https://127.0.0.1.com/api/versions?page=2").unwrap();
+    assert_eq!(uri.host(), Some(Host::V4("127.0.0.1")));
 
     let uri = Uri::parse("https://example.com/foo/bar").unwrap();
     let mut path_segments = uri.path_segments();
@@ -16,6 +19,13 @@ fn parser() {
     assert_eq!(path_segments.next(), None);
 }
 
+// #[test]
+// fn v6_parse() {
+//     use nom_uri::Host;
+//     use nom_uri::Uri;
+//     let uri = Uri::parse("https://[1fc5:74ff::27ff]/api/versions?page=2").unwrap();
+//     assert_eq!(uri.host(), Some(Host::V6("1fc5:74ff::27ff")));
+// }
 #[test]
 fn formatter() {
     use nom_uri::Uri;

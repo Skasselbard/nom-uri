@@ -22,13 +22,13 @@ extern crate hash32_derive;
 pub use error::Error;
 use error::*;
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash, Ord, PartialOrd)]
 #[allow(unused)]
 enum UriReference<'uri> {
     Uri(Uri<'uri>),
     Reference(Reference<'uri>),
 }
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct Uri<'uri> {
     scheme: &'uri str,
     authority: Option<Authority<'uri>>,
@@ -36,27 +36,27 @@ pub struct Uri<'uri> {
     query: Option<Query<'uri>>,
     fragment: Option<Fragment<'uri>>,
 }
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash, Ord, PartialOrd)]
 struct Reference<'uri> {
     authority: Option<Authority<'uri>>,
     path: Path<'uri>,
     query: Option<Query<'uri>>,
     fragment: Option<Fragment<'uri>>,
 }
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash, Ord, PartialOrd)]
 struct Authority<'uri> {
     userinfo: Option<&'uri str>,
     host: Host<'uri>,
     port: Option<&'uri str>,
 }
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash, Ord, PartialOrd)]
 pub enum Host<'uri> {
     RegistryName(&'uri str),
     V4(&'uri str),
     V6(&'uri str),
     VFuture(&'uri str),
 }
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash, Ord, PartialOrd)]
 enum Path<'uri> {
     AbEmpty(&'uri str),
     Absolute(&'uri str),
@@ -64,9 +64,9 @@ enum Path<'uri> {
     Rootless(&'uri str),
     Empty,
 }
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash, Hash32)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash, Hash32, Ord, PartialOrd)]
 struct Fragment<'uri>(&'uri str);
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash, Hash32)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash, Hash32, Ord, PartialOrd)]
 struct Query<'uri>(&'uri str);
 
 impl<'uri> Uri<'uri> {

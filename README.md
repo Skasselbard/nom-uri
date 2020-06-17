@@ -10,9 +10,12 @@ All parsing is done completely in memory.
 extern crate nom_uri;
 
 use nom_uri::Uri;
+use nom_uri::Host;
 
 fn main() {
     // Parsing
+    let uri = Uri::parse("https://127.0.0.1.com/api/versions?page=2").unwrap();
+    assert_eq!(uri.host(), Some(Host::V4("127.0.0.1")));
     let uri = Uri::parse("https://example.com/foo/bar").unwrap();
     let mut path_segments = uri.path_segments();
     assert_eq!(path_segments.next(), Some("foo"));
