@@ -70,7 +70,7 @@ struct Fragment<'uri>(&'uri str);
 struct Query<'uri>(&'uri str);
 
 pub trait ToUri<'uri> {
-    fn to_uri(&self, buffer: &'uri str) -> Uri<'uri>;
+    fn to_uri(&self, buffer: &'uri mut str) -> Uri<'uri>;
 }
 pub trait FromUri {
     fn from_uri(uri: &Uri) -> Self;
