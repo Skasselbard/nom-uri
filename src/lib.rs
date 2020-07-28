@@ -69,6 +69,13 @@ struct Fragment<'uri>(&'uri str);
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash, Hash32, Ord, PartialOrd)]
 struct Query<'uri>(&'uri str);
 
+pub trait ToUri {
+    fn to_uri(&self) -> Uri;
+}
+pub trait FromUri {
+    fn from_uri(&self) -> Uri;
+}
+
 impl<'uri> Uri<'uri> {
     /// Parse an URI from a string.
     ///
