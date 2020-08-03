@@ -849,3 +849,9 @@ impl<'uri> hash32::Hash for Authority<'uri> {
         hash32::Hash::hash(self.port.unwrap_or(""), state);
     }
 }
+impl<'string> core::convert::TryFrom<&'string str> for Uri<'string> {
+    type Error = Error;
+    fn try_from(string: &'string str) -> Result<Self, Error> {
+        Uri::parse(string)
+    }
+}
