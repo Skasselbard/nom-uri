@@ -69,8 +69,8 @@ struct Fragment<'uri>(&'uri str);
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash, Hash32, Ord, PartialOrd)]
 struct Query<'uri>(&'uri str);
 
-pub trait ToUri<'uri> {
-    fn to_uri(&self, buffer: &'uri mut str) -> Uri<'uri>;
+pub trait ToUri {
+    fn to_uri<'uri>(&self, buffer: &'uri mut str) -> Uri<'uri>;
 }
 pub trait FromUri {
     fn from_uri(uri: &Uri) -> Self;
